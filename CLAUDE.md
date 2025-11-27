@@ -8,79 +8,96 @@ thosts is a cross-platform hosts file management tool built with Tauri 2.0 + Rea
 
 ## Development Commands
 
-### Frontend Development
+### Core Development Workflow
+
 ```bash
 # Install dependencies
 npm install
 
-# Start frontend dev server (Vite)
-npm run dev
-
-# Build frontend for production
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-### Tauri Development
-```bash
-# Run full Tauri app in development mode
+# Development mode (full Tauri app with hot reload)
 npm run tauri dev
 
-# Build native application for production
+# Frontend-only development (Vite dev server on port 1420)
+npm run dev
+
+# Production build (creates platform-specific installers)
 npm run tauri build
 
-# Build without dev server debug output
-npm run tauri build -- --no-debug
-```
+# Frontend-only build
+npm run build
 
-### Type Checking
-```bash
-# TypeScript compilation check
+# TypeScript type checking
 npx tsc --noEmit
 ```
 
-## Architecture
+### Build Outputs
+Production builds create installers in `src-tauri/target/release/bundle/`:
+- **Linux**: `.deb` (Debian/Ubuntu) and `.rpm` (Fedora/RHEL) packages
+- **Windows**: `.msi` and `.nsis` installers
+- **macOS**: `.dmg` disk image and `.app` bundle
 
-### Core Structure
-- **Frontend**: React 19 + TypeScript with Vite
-- **Backend**: Tauri 2.0 with Rust for system operations
-- **UI**: Vanilla CSS with CSS variables for theming
-- **Storage**: LocalStorage for profiles and settings persistence
+## Architecture & Key Components
 
-### Key Directories
-- `src/components/`: UI components (Editor, Sidebar, Settings)
-- `src/contexts/`: React context providers (SettingsContext)
-- `src/layouts/`: Layout components (MainLayout)
-- `src/services/`: Tauri command interfaces (hostsService)
-- `src/utils/`: Utility functions (storage abstraction)
-- `src-tauri/`: Rust backend code and Tauri configuration
+### Technology Stack
+- **Frontend**: React 19 + TypeScript + Vite
+- **Backend**: Tauri 2.0 + Rust for system operations
+- **UI**: Monaco Editor + vanilla CSS with CSS variables
+- **Storage**: LocalStorage for profiles and settings
 
-### Component Hierarchy
+### Application Flow
+
+**Main Layout (`src/layouts/MainLayout.tsx`)** - Central coordinator:
+- Manages profile state, editor content, and system hosts path
+- Handles save operations with admin authentication fallback
+- Coordinates between Sidebar, Editor, and Settings components
+
+**Tauri Commands (`src-tauri/src/lib.rs`)** - Rust backend:
+- `get_hosts_path()`: Returns OS-specific hosts file path
+- `read_hosts(path)`, `write_hosts(path, content)`: Basic file operations
+- `write_hosts_with_admin(path, content, credentials)`: Privileged writes
+- `validate_admin_credentials(credentials)`: Authentication verification
+
+**Frontend Services (`src/services/hostsService.ts`)** - Backend interface:
+- Typesafe wrappers around Tauri commands
+- Defines `HostsProfile` and `AdminCredentials` interfaces
+- Handles cross-platform hosts path resolution
+
+**State Management**:
+- **SettingsContext**: Global theme, language, font preferences
+- **LocalStorage**: Profile persistence via `utils/storage.ts`
+- **React hooks**: Local component state (no external state library)
+
+### Component Architecture
+
 ```
 App (theme initialization)
-├── SettingsProvider (global settings context)
-└── MainLayout (root layout)
-    ├── Sidebar (profile navigation)
-    ├── Editor (Monaco code editor)
-    └── Settings (settings modal)
+├── SettingsProvider (global settings with localStorage persistence)
+└── MainLayout (central coordinator, profile state, admin auth)
+    ├── Sidebar (profile list, toggles, add profile, settings access)
+    ├── Editor (Monaco editor for hosts content)
+    ├── Settings (theme, language, font configuration)
+    └── AdminAuthModal (credential modal for system file writes)
 ```
 
-## Tauri Commands (Backend API)
+## Critical Implementation Details
 
-The Rust backend exposes these Tauri commands for frontend use:
+### System File Operations
+The app handles privileged system hosts file writes with a two-stage approach:
 
-- `get_hosts_path() -> String`: Returns OS-specific hosts file path
-- `read_hosts(path: &str) -> Result<String, String>`: Reads file content
-- `write_hosts(path: &str, content: &str) -> Result<(), String>`: Writes to file
-- `greet(name: &str) -> String`: Example greeting command
+1. **First attempt**: Try `write_hosts()` without admin privileges
+2. **Fallback**: If failed, show `AdminAuthModal` and retry with `write_hosts_with_admin()`
 
-All file operations require elevated permissions on the system hosts file.
+**Cross-platform credential handling**:
+- **Windows**: Uses PowerShell elevation (currently WSL-compatible with sudo fallback)
+- **Unix-like**: Uses `echo password | sudo -S command` pattern
 
-## Key Interfaces
+### Profile Management Logic
+- **System hosts** (`id: '1'`): Always reflects actual `/etc/hosts` file
+- **Local profiles**: User-defined content stored in LocalStorage
+- **Profile toggling**: Currently UI-only (system hosts not recomputed yet)
 
-### HostsProfile
+### Key TypeScript Interfaces
+
 ```typescript
 interface HostsProfile {
   id: string;
@@ -89,37 +106,57 @@ interface HostsProfile {
   active: boolean;
   type: 'system' | 'local' | 'remote';
 }
-```
 
-### Settings
-```typescript
 interface Settings {
   theme: 'light' | 'dark' | 'system';
   language: 'en' | 'zh-CN' | 'zh-TW';
   fontFamily: string;
   fontSize: number;
 }
+
+interface AdminCredentials {
+  username: string;
+  password: string;
+}
 ```
 
-## Cross-Platform Considerations
+### Internationalization
+- **Translation files**: `src/locales/{en,zh-CN,zh-TW}.ts`
+- **Hook**: `useTranslation()` provides type-safe translations
+- **Dynamic naming**: System hosts profile name updates with language changes
 
-- **Windows**: Hosts file at `C:\Windows\System32\drivers\etc\hosts`
-- **macOS/Linux**: Hosts file at `/etc/hosts`
-- System file writes require Administrator/sudo privileges
-- Application targets Windows, macOS, and Linux via Tauri bundling
+## Development Patterns
 
-## Development Notes
+### State Updates
+Always update profiles array immutably and save to LocalStorage:
+```typescript
+setProfiles(prev => prev.map(p =>
+  p.id === targetId ? { ...p, updatedField } : p
+));
+```
 
-- Frontend runs on `http://localhost:1420` during development
-- Monaco Editor is used for code editing with syntax highlighting
-- State management uses React hooks and context (no external state library)
-- CSS variables are used extensively for theming and dynamic styling
-- All user data is stored in LocalStorage for persistence
-- The app follows a desktop-first design pattern
+### Error Handling
+All Rust file operations return `Result<T, String>` - errors are handled in TypeScript with user-friendly messages.
 
-## Build Output
+### CSS Architecture
+- **Theme system**: CSS variables with `[data-theme]` attributes
+- **Responsive**: Desktop-first design with fixed sidebar width
+- **Monaco Editor**: Custom font size via CSS variables
 
-Production builds create platform-specific installers:
-- **Windows**: `.exe` installer
-- **macOS**: `.dmg` disk image
-- **Linux**: `.deb` and `.rpm` packages (configurable in `src-tauri/tauri.conf.json`)
+## Build Configuration
+
+**Tauri config (`src-tauri/tauri.conf.json`)**:
+- Development server: `http://localhost:1420`
+- Bundle targets: `["msi", "nsis", "deb", "rpm"]` (Windows/Linux focused)
+- Multi-language installers with embedded translations
+
+**Cross-platform paths**:
+- Windows: `C:\Windows\System32\drivers\etc\hosts`
+- macOS/Linux: `/etc/hosts`
+
+## Future Development Areas
+
+1. **Profile synthesis**: Combine active profiles into system hosts file
+2. **Enhanced security**: Input validation and sandboxing
+3. **Performance**: Virtual scrolling for large hosts files
+4. **Remote profiles**: HTTP-based profile fetching and syncing

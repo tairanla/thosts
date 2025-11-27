@@ -1,4 +1,4 @@
-import { FileText, Shield, Plus, Power, PowerOff, Settings } from 'lucide-react';
+import { FileText, Github, Plus, Power, PowerOff, Settings } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { HostsProfile } from '../../services/hostsService';
@@ -7,7 +7,6 @@ interface SidebarProps {
     profiles: HostsProfile[];
     selectedId: string;
     showAdminAuth?: boolean;
-}
     onSelect: (id: string) => void;
     onToggle: (id: string, active: boolean) => void;
     onAddProfile: () => void;
@@ -66,9 +65,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
                 <button
                     className={`settings-btn ${selectedId === 'settings' ? 'active' : ''}`}
                     onClick={() => onSelect('settings')}
+                    title={t.common.settings}
                 >
                     <Settings size={18} />
-                    <span>{t.common.settings}</span>
+                </button>
+                <button
+                    className="github-btn"
+                    onClick={() => window.open('https://github.com/tairanla/thosts', '_blank')}
+                    title="GitHub"
+                >
+                    <Github size={18} />
                 </button>
             </div>
         </div>

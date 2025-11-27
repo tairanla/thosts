@@ -2,7 +2,7 @@
 
 [English](./README.md) | 中文
 
-tHosts 是一个跨平台的 hosts 文件管理工具，使用 Tauri 2.0 + Rust + React 技术栈，灵感来源于 SwitchHosts。
+tHosts 是一个跨平台的 hosts 文件管理工具，使用 Tauri 2.0 + Rust + React 技术栈，灵感来源于 [SwitchHosts](https://github.com/oldj/SwitchHosts)。
 
 ## 🌟 功能特色
 
@@ -62,7 +62,6 @@ npm run tauri build
 
 ## 项目结构
 
-See [docs/PLAN.md](docs/PLAN.md) for the development plan and [docs/SUMMARY.md](docs/SUMMARY.md) for implementation details.
 查看 [docs/PLAN.md](docs/PLAN.md) 了解开发计划和 [docs/SUMMARY.md](docs/SUMMARY.md) 了解实现细节。
 
 ## 技术栈

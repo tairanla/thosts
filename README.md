@@ -2,7 +2,7 @@
 
 English | [中文](./README.zh_CN.md)
 
-A cross-platform hosts file management tool built with Tauri 2.0 + React + Rust, inspired by SwitchHosts.
+A cross-platform hosts file management tool built with Tauri 2.0 + React + Rust, inspired by [SwitchHosts](https://github.com/oldj/SwitchHosts).
 
 ## Features
 

@@ -160,14 +160,24 @@ export const MainLayout: React.FC = () => {
         // TODO: Re-calculate and apply system hosts based on active profiles
     };
 
-    const handleAddProfile = () => {
+    const handleAddProfile = async () => {
         const name = prompt('Enter profile name:');
         if (!name) return;
+
+        // Get current system hosts content
+        let systemContent = '';
+        try {
+            const path = await hostsService.getHostsPath();
+            systemContent = await hostsService.readHosts(path);
+        } catch (error) {
+            console.error('Failed to load system hosts for new profile:', error);
+            systemContent = '# Failed to load system hosts\n';
+        }
 
         const newProfile: HostsProfile = {
             id: Date.now().toString(),
             name,
-            content: '# New Profile\n',
+            content: systemContent,
             active: false,
             type: 'local'
         };
