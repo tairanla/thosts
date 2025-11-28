@@ -11,7 +11,6 @@ export const Settings: React.FC = () => {
         <div className="settings-container">
             <div className="settings-header">
                 <h2>{t.settings.title}</h2>
-                <p className="settings-subtitle">Customize your thosts experience</p>
             </div>
 
             <div className="settings-content">

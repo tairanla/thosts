@@ -1,5 +1,6 @@
+import { getVersion } from '@tauri-apps/api/app';
 import { FileText, Github, Plus, Power, PowerOff, Settings } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { HostsProfile } from '../../services/hostsService';
 
@@ -14,13 +15,23 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect, onToggle, onAddProfile }) => {
     const { t } = useTranslation();
+    const [appVersion, setAppVersion] = useState('0.1.0');
+
+    useEffect(() => {
+        getVersion().then(version => {
+            setAppVersion(version);
+        }).catch(() => {
+            // Fallback to default version if failed
+            setAppVersion('0.1.0');
+        });
+    }, []);
 
     return (
         <div className="sidebar">
             {/* Header */}
             <div className="sidebar-header">
                 <div className="app-title">
-                    <div className="app-icon">H</div>
+                    <div className="app-icon">T-Hosts</div>
                     <h1>thosts</h1>
                 </div>
                 <button className="add-profile-btn" title={t.common.addProfile} onClick={onAddProfile}>
@@ -62,19 +73,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
 
             {/* Settings Button */}
             <div className="sidebar-footer">
-                <button
-                    className={`settings-btn ${selectedId === 'settings' ? 'active' : ''}`}
-                    onClick={() => onSelect('settings')}
-                    title={t.common.settings}
-                >
-                    <Settings size={18} />
-                </button>
+                <div className="version-info">
+                    v{appVersion}
+                </div>
                 <button
                     className="github-btn"
                     onClick={() => window.open('https://github.com/tairanla/thosts', '_blank')}
                     title="GitHub"
                 >
                     <Github size={18} />
+                </button>
+                <button
+                    className={`settings-btn ${selectedId === 'settings' ? 'active' : ''}`}
+                    onClick={() => onSelect('settings')}
+                    title={t.common.settings}
+                >
+                    <Settings size={18} />
                 </button>
             </div>
         </div>

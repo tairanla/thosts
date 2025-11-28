@@ -23,10 +23,7 @@ export interface Translations {
     adminAuth: {
         title: string;
         subtitle: string;
-        username: string;
-        password: string;
-        usernamePlaceholder: string;
-        passwordPlaceholder: string;
+        systemDialogNotice: string;
         authenticate: string;
         authenticating: string;
         notice: string;

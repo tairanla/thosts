@@ -8,11 +8,6 @@ export interface HostsProfile {
     type: 'system' | 'local' | 'remote';
 }
 
-export interface AdminCredentials {
-    username: string;
-    password: string;
-}
-
 export const hostsService = {
     getHostsPath: async (): Promise<string> => {
         return await invoke('get_hosts_path');
@@ -26,14 +21,13 @@ export const hostsService = {
         return await invoke('write_hosts', { path, content });
     },
 
-    writeHostsWithAdmin: async (path: string, content: string, credentials: AdminCredentials): Promise<void> => {
-        return await invoke('write_hosts_with_admin', { path, content, credentials });
+    /**
+     * Write hosts file with system authentication dialog.
+     * This will trigger the system's native authentication dialog:
+     * - Windows: UAC (User Account Control) dialog
+     * - macOS/Linux: sudo authentication dialog
+     */
+    writeHostsWithAdmin: async (path: string, content: string): Promise<void> => {
+        return await invoke('write_hosts_with_admin', { path, content });
     },
-
-    validateAdminCredentials: async (credentials: AdminCredentials): Promise<boolean> => {
-        return await invoke('validate_admin_credentials', { credentials });
-    },
-
-    // Helper to parse hosts file content (simple version)
-    // In a real app, we might want to parse it into structured data
 };
