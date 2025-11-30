@@ -23,13 +23,13 @@ export const en: Translations = {
         fontSize: 'Font Size (px)',
     },
     adminAuth: {
-        title: 'Administrator Authentication Required',
+        title: 'Administrator Permission Required',
         subtitle: 'System authentication dialog will appear to grant permissions.',
-        systemDialogNotice: 'Click "Authenticate" to proceed. A system authentication dialog will appear asking for your administrator password. Please enter your credentials in the system dialog.',
-        authenticate: 'Authenticate',
+        systemDialogNotice: 'This operation requires administrator privileges to modify the system hosts file.\n\nAfter clicking "OK", the system will display an authentication dialog asking for your administrator password.',
+        authenticate: 'OK',
         authenticating: 'Waiting for authentication...',
         notice: 'This action requires administrator privileges to modify the system hosts file. The system will prompt you for authentication.',
-        permissionDenied: 'Permission denied or authentication canceled.',
+        permissionDenied: 'Operation canceled',
         invalidCredentials: 'Authentication failed. Please try again.',
     },
 };

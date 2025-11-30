@@ -3,6 +3,7 @@
 ## Completed Features
 
 ### ✅ Phase 1: Foundation & UI Setup
+
 - **Project Configuration**
   - CSS variables for theming (Light/Dark themes)
   - i18n structure with React Context
@@ -20,6 +21,7 @@
   - Font configuration (Family & Size)
 
 ### ✅ Phase 2: Rust Backend (Tauri Commands)
+
 - **File Operations**
   - `get_hosts_path`: Returns system hosts file path based on OS
   - `read_hosts`: Reads hosts file content
@@ -30,6 +32,7 @@
   - MacOS/Linux: `/etc/hosts`
 
 ### ✅ Phase 3: Frontend Logic & Integration
+
 - **Editor Implementation**
   - Line numbers
   - Monospace font with configurable size
@@ -48,6 +51,7 @@
   - Profile state management
 
 ### ✅ Phase 4: Settings Implementation
+
 - **Theme Logic**
   - CSS variables switch based on theme selection
   - System preference detection
@@ -65,7 +69,7 @@
 
 ## Project Structure
 
-```
+```txt
 thosts/
 ├── docs/
 │   └── PLAN.md                 # Project plan
@@ -102,6 +106,7 @@ thosts/
 ```
 
 ## Key Technologies
+
 - **Frontend**: React 19 + TypeScript + Vite
 - **Backend**: Tauri 2.0 + Rust
 - **Styling**: Vanilla CSS with CSS variables
@@ -124,6 +129,7 @@ npm run tauri dev
 ## Next Steps (Optional Enhancements)
 
 ### Phase 5: Polish & Distribution
+
 - [ ] **Icon & Branding**: Custom app icon
 - [ ] **Advanced Features**:
   - [ ] Merge active profiles into system hosts
@@ -142,18 +148,22 @@ npm run tauri dev
 ## Notes
 
 ### Permission Handling
+
 Writing to system hosts file requires elevated permissions:
+
 - **Windows**: Run as Administrator
 - **MacOS/Linux**: Use `sudo` or authentication dialog
 
 Currently, the app will show an error if write permission is denied. Future enhancement: automatically request elevated permissions via Tauri.
 
 ### Profile Types
+
 - `system`: The actual system hosts file (ID: '1')
 - `local`: User-created profiles stored in localStorage
 - `remote`: Reserved for future remote/cloud sync feature
 
 ### Data Persistence
+
 - **Settings**: localStorage (`thosts-settings`)
 - **Profiles**: localStorage (`thosts-profiles`)
 - System hosts content is NOT persisted in localStorage for security

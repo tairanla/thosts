@@ -9,9 +9,6 @@ export const Settings: React.FC = () => {
 
     return (
         <div className="settings-container">
-            <div className="settings-header">
-                <h2>{t.settings.title}</h2>
-            </div>
 
             <div className="settings-content">
                 {/* Appearance Section */}

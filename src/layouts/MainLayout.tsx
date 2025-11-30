@@ -1,7 +1,6 @@
 
 import { RefreshCw, Save } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { AdminAuthModal } from '../components/AdminAuthModal/AdminAuthModal';
 import { Editor } from '../components/Editor/Editor';
 import { Settings } from '../components/Settings/Settings';
 import { Sidebar } from '../components/Sidebar/Sidebar';
@@ -17,9 +16,6 @@ export const MainLayout: React.FC = () => {
     const [systemPath, setSystemPath] = useState('');
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
-    const [showAdminAuth, setShowAdminAuth] = useState(false);
-    const [adminAuthError, setAdminAuthError] = useState('');
-    const [isAuthenticating, setIsAuthenticating] = useState(false);
 
     const [profiles, setProfiles] = useState<HostsProfile[]>(() => {
         const saved = profileStorage.load();
@@ -212,10 +208,37 @@ export const MainLayout: React.FC = () => {
             } catch (error) {
                 console.error('Failed to save hosts without admin privileges:', error);
 
-                // If save failed, show admin auth dialog
-                setAdminAuthError('');
-                setShowAdminAuth(true);
-                setLoading(false);
+                // If save failed, request admin permission using Tauri dialog
+                const hasPermission = await hostsService.requestAdminPermission(
+                    t.adminAuth.title,
+                    t.adminAuth.systemDialogNotice,
+                    t.adminAuth.authenticate,
+                    t.common.cancel
+                );
+                if (!hasPermission) {
+                    setStatus(t.adminAuth.permissionDenied);
+                    setTimeout(() => setStatus(''), 3000);
+                    setLoading(false);
+                    return;
+                }
+
+                // User confirmed, try to save with admin privileges
+                try {
+                    await hostsService.writeHostsWithAdmin(systemPath, mergedContent);
+
+                    // Update local state on success
+                    setOriginalContent(mergedContent);
+                    setContent(mergedContent);
+
+                    setStatus('Saved successfully');
+                    setTimeout(() => setStatus(''), 3000);
+                    setLoading(false);
+                } catch (adminError) {
+                    console.error('Failed to save hosts with admin privileges:', adminError);
+                    setStatus('Failed to save with admin privileges');
+                    setTimeout(() => setStatus(''), 3000);
+                    setLoading(false);
+                }
             }
         } else {
             // Saving local profile
@@ -248,71 +271,8 @@ export const MainLayout: React.FC = () => {
         };
     }, [content, originalContent, selectedId, loading, handleSave]);
 
-    const handleAdminAuth = async (): Promise<boolean> => {
-        if (!systemPath) return false;
 
-        setIsAuthenticating(true);
-        setAdminAuthError('');
-
-        try {
-            // Call the system authentication dialog with timeout
-            // This will trigger:
-            // - Windows: UAC dialog
-            // - Linux: polkit/pkexec dialog or sudo password prompt
-            // - macOS: sudo password prompt or system authentication dialog
-            const timeoutPromise = new Promise<never>((_, reject) => {
-                setTimeout(() => reject(new Error('Operation timeout')), 300000); // 5 minutes timeout
-            });
-
-            // Calculate merged content before saving
-            const mergedContent = calculateMergedHosts();
-
-            await Promise.race([
-                hostsService.writeHostsWithAdmin(systemPath, mergedContent),
-                timeoutPromise
-            ]);
-
-            // Update local state on success
-            // Note: We don't update system profile content with merged content
-            // System profile content should remain as the original system hosts (without profiles)
-            setOriginalContent(mergedContent); // Update original content to reflect what's in the file now
-
-            // Update the editor content to match what was saved
-            setContent(mergedContent);
-
-            setStatus('Saved successfully');
-            setTimeout(() => setStatus(''), 3000);
-            setIsAuthenticating(false);
-
-            return true;
-        } catch (error) {
-            console.error('Failed to save hosts with admin privileges:', error);
-            const errorMessage = typeof error === 'string' ? error : String(error);
-
-            // Handle different error scenarios
-            if (errorMessage.includes('timeout') || errorMessage.includes('Operation timeout')) {
-                setAdminAuthError('Operation timed out. Please try again.');
-            } else if (errorMessage.includes('canceled') ||
-                errorMessage.includes('denied') ||
-                errorMessage.includes('Authentication failed') ||
-                errorMessage.includes('not authorized') ||
-                errorMessage.includes('拒绝')) {
-                setAdminAuthError(t.adminAuth.permissionDenied);
-            } else if (errorMessage.includes('Invalid administrator credentials') ||
-                errorMessage.includes('incorrect password') ||
-                errorMessage.includes('authentication failure')) {
-                setAdminAuthError(t.adminAuth.invalidCredentials);
-            } else {
-                // Generic error message
-                setAdminAuthError(t.adminAuth.permissionDenied);
-            }
-
-            setIsAuthenticating(false);
-            return false;
-        }
-    };
-
-    const handleToggleProfile = (id: string, active: boolean) => {
+    const handleToggleProfile = useCallback((id: string, active: boolean) => {
         setProfiles(prev => {
             const updated = prev.map(p =>
                 p.id === id ? { ...p, active } : p
@@ -332,9 +292,10 @@ export const MainLayout: React.FC = () => {
                     p.content.trim().length > 0
                 );
 
+                let newMergedContent: string;
                 if (activeProfiles.length === 0) {
                     // No active profiles, show just system content
-                    setContent(systemContent);
+                    newMergedContent = systemContent;
                 } else {
                     // Build merged content preview
                     const parts: string[] = [];
@@ -351,7 +312,67 @@ export const MainLayout: React.FC = () => {
                         }
                     });
 
-                    setContent(parts.join('\n'));
+                    newMergedContent = parts.join('\n');
+                }
+
+                setContent(newMergedContent);
+
+                // Auto-save to system hosts file if content changed
+                // Use a separate effect-like approach to handle async save
+                if (systemPath && newMergedContent !== originalContent) {
+                    // Calculate merged content using the updated profiles
+                    const saveMergedContent = async () => {
+                        try {
+                            setLoading(true);
+                            await hostsService.writeHosts(systemPath, newMergedContent);
+
+                            // Update originalContent to reflect what's in the file now
+                            setOriginalContent(newMergedContent);
+
+                            setStatus('Saved successfully');
+                            setTimeout(() => setStatus(''), 3000);
+                            setLoading(false);
+                        } catch (error) {
+                            console.error('Failed to save hosts without admin privileges:', error);
+
+                            // If save failed, request admin permission using Tauri dialog
+                            const hasPermission = await hostsService.requestAdminPermission(
+                                t.adminAuth.title,
+                                t.adminAuth.systemDialogNotice,
+                                t.adminAuth.authenticate,
+                                t.common.cancel
+                            );
+                            if (!hasPermission) {
+                                setStatus(t.adminAuth.permissionDenied);
+                                setTimeout(() => setStatus(''), 3000);
+                                setLoading(false);
+                                return;
+                            }
+
+                            // User confirmed, try to save with admin privileges
+                            try {
+                                await hostsService.writeHostsWithAdmin(systemPath, newMergedContent);
+
+                                // Update local state on success
+                                setOriginalContent(newMergedContent);
+                                setContent(newMergedContent);
+
+                                setStatus('Saved successfully');
+                                setTimeout(() => setStatus(''), 3000);
+                                setLoading(false);
+                            } catch (adminError) {
+                                console.error('Failed to save hosts with admin privileges:', adminError);
+                                setStatus('Failed to save with admin privileges');
+                                setTimeout(() => setStatus(''), 3000);
+                                setLoading(false);
+                            }
+                        }
+                    };
+
+                    // Use Promise.resolve().then() to defer execution after state update
+                    Promise.resolve().then(() => {
+                        saveMergedContent();
+                    });
                 }
 
                 // Keep originalContent as the actual system hosts content (without profiles)
@@ -360,7 +381,7 @@ export const MainLayout: React.FC = () => {
 
             return updated;
         });
-    };
+    }, [selectedId, systemPath, originalContent]);
 
     // Check if content has been modified
     // For system hosts, check if merged content differs from original
@@ -402,35 +423,36 @@ export const MainLayout: React.FC = () => {
                 selectedId={selectedId}
                 onToggle={handleToggleProfile}
                 onAddProfile={handleAddProfile}
-                showAdminAuth={showAdminAuth}
             />
 
             <div className="main-content">
                 <div className="toolbar justify-between">
                     <div className="font-medium text-[var(--text-primary)] flex items-center gap-2">
                         {selectedId === 'settings' ? t.common.settings : profiles.find(p => p.id === selectedId)?.name}
-                        {status && <span className="text-xs text-[var(--text-tertiary)]">({status})</span>}
+                        {selectedId !== 'settings' && status && <span className="text-xs text-[var(--text-tertiary)]">({status})</span>}
                     </div>
 
-                    <div className="flex gap-2">
-                        <button
-                            className="icon-btn"
-                            title={t.common.refresh}
-                            onClick={loadSystemHosts}
-                            disabled={loading}
-                        >
-                            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                        </button>
-                        <button
-                            className="btn btn-primary"
-                            title={t.common.save}
-                            onClick={handleSave}
-                            disabled={loading || selectedId === 'settings' || !isContentModified}
-                        >
-                            <Save size={18} />
-                            <span>{t.common.save}</span>
-                        </button>
-                    </div>
+                    {selectedId !== 'settings' && (
+                        <div className="flex gap-2">
+                            <button
+                                className="icon-btn"
+                                title={t.common.refresh}
+                                onClick={loadSystemHosts}
+                                disabled={loading}
+                            >
+                                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                title={t.common.save}
+                                onClick={handleSave}
+                                disabled={loading || !isContentModified}
+                            >
+                                <Save size={18} />
+                                <span>{t.common.save}</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {selectedId === 'settings' ? (
@@ -439,18 +461,6 @@ export const MainLayout: React.FC = () => {
                     <Editor content={content} onChange={setContent} />
                 )}
             </div>
-
-            {/* Admin Authentication Modal */}
-            <AdminAuthModal
-                isOpen={showAdminAuth}
-                onClose={() => {
-                    setShowAdminAuth(false);
-                    setAdminAuthError('');
-                }}
-                onConfirm={handleAdminAuth}
-                isLoading={isAuthenticating}
-                error={adminAuthError}
-            />
         </div>
     );
 };

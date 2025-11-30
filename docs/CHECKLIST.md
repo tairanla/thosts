@@ -3,24 +3,28 @@
 ## ✅ Completed Tasks
 
 ### Phase 1: Foundation & UI Setup
+
 - [x] Project configuration with CSS variables for theming
 - [x] Basic layout (Sidebar, Main Content, Toolbar)
 - [x] Settings UI (Theme, Language, Font)
 - [x] Component structure
 
 ### Phase 2: Rust Backend
+
 - [x] `get_hosts_path` command
 - [x] `read_hosts` command  
 - [x] `write_hosts` command
 - [x] Cross-platform path detection
 
 ### Phase 3: Frontend Logic
+
 - [x] Line-numbered editor
 - [x] Profile management (Create/Edit/Toggle)
 - [x] LocalStorage persistence
 - [x] System hosts integration
 
 ### Phase 4: Settings Implementation
+
 - [x] Theme switching (Light/Dark/System)
 - [x] Internationalization (en, zh-CN, zh-TW)
 - [x] Dynamic font configuration
@@ -29,6 +33,7 @@
 ## 🔨 Optional Enhancements
 
 ### High Priority
+
 - [ ] Fix CSS transition issue (apply selectively to avoid conflicts)
 - [ ] Implement profile merging (combine active profiles → system hosts)
 - [ ] Add delete profile functionality
@@ -37,6 +42,7 @@
 - [ ] Add confirmation dialogs for destructive actions
 
 ### Medium Priority
+
 - [ ] Syntax highlighting for hosts file (IPs, domains, comments)
 - [ ] Search functionality in editor
 - [ ] Profile import/export (JSON format)
@@ -45,6 +51,7 @@
 - [ ] Profile templates (dev, staging, production)
 
 ### Low Priority
+
 - [ ] Profile grouping/folders
 - [ ] Remote profile sync (cloud storage)
 - [ ] History/undo functionality
@@ -53,6 +60,7 @@
 - [ ] Statistics (lines, active entries, etc.)
 
 ### Polish & Distribution
+
 - [ ] Custom app icon and branding
 - [ ] Splash screen
 - [ ] About dialog

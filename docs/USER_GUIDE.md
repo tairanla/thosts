@@ -5,6 +5,7 @@
 ### First Launch
 
 When you first launch thosts, you'll see:
+
 - **Sidebar** (left): List of host profiles
 - **Editor** (center): Code editor with line numbers
 - **Toolbar** (top): Action buttons (Refresh, Save)
@@ -12,6 +13,7 @@ When you first launch thosts, you'll see:
 ### Default Profiles
 
 The app comes with three default profiles:
+
 1. **System Hosts** - Your actual system hosts file (read from disk)
 2. **Dev Environment** - Example local profile
 3. **Staging** - Example remote profile
@@ -50,27 +52,32 @@ The app comes with three default profiles:
 Click the **Settings** button at the bottom of the sidebar to configure:
 
 #### Theme
+
 - **Light**: Bright color scheme
 - **Dark**: Dark color scheme (easier on the eyes)
 - **System**: Follow your OS theme preference
 
 #### Language
+
 - **English**: English UI
 - **简体中文**: Simplified Chinese UI
 - **繁体中文**: Traditional Chinese UI
 
 #### Font
+
 - **Font Family**: Change the editor's font (monospace recommended)
 - **Font Size**: Adjust text size (default: 14px)
 
 ## Tips & Tricks
 
 ### Keyboard Navigation
+
 - Use arrow keys to navigate the editor
 - `Ctrl/Cmd + A` to select all
 - `Ctrl/Cmd + C/V` to copy/paste
 
 ### Editor Features
+
 - **Line Numbers**: Automatically shown on the left
 - **No Spell Check**: Disabled for technical content
 - **Monospace Font**: Better alignment for IP addresses
@@ -87,7 +94,8 @@ Click the **Settings** button at the bottom of the sidebar to configure:
 ### Development Environment
 
 Create a profile named "Dev" with:
-```
+
+```txt
 # Local Development
 127.0.0.1 api.local
 127.0.0.1 app.local
@@ -97,7 +105,8 @@ Create a profile named "Dev" with:
 ### Blocking Ads/Trackers
 
 Create a profile named "Ad Block" with:
-```
+
+```txt
 # Block common trackers
 0.0.0.0 ads.example.com
 0.0.0.0 tracker.example.com
@@ -106,6 +115,7 @@ Create a profile named "Ad Block" with:
 ### Multiple Environments
 
 Create profiles for each environment:
+
 - **Production**: Real server IPs
 - **Staging**: Staging server IPs
 - **Development**: Local/localhost entries
@@ -116,7 +126,8 @@ Create profiles for each environment:
 
 **Problem**: Error when clicking Save on System Hosts
 
-**Solution**: 
+**Solution**:
+
 - **Windows**: Run thosts as Administrator (right-click → Run as Administrator)
 - **MacOS/Linux**: Grant necessary permissions or run with sudo
 
@@ -125,6 +136,7 @@ Create profiles for each environment:
 **Problem**: Edited hosts but website still loads old IP
 
 **Solution**:
+
 - Flush DNS cache:
   - **Windows**: `ipconfig /flushdns`
   - **MacOS**: `sudo dscacheutil -flushcache`
@@ -134,7 +146,8 @@ Create profiles for each environment:
 
 **Problem**: Created profile but it disappeared after restart
 
-**Solution**: 
+**Solution**:
+
 - Check browser console for localStorage errors
 - Ensure localStorage is enabled
 - Try clearing localStorage and recreating profiles
@@ -142,12 +155,14 @@ Create profiles for each environment:
 ## Hosts File Syntax
 
 ### Basic Format
-```
+
+```txt
 IP_ADDRESS    HOSTNAME    [ALIAS...]
 ```
 
 ### Examples
-```
+
+```txt
 # IPv4
 127.0.0.1       localhost
 192.168.1.100   server.local
@@ -162,6 +177,7 @@ fe80::1         link-local
 ```
 
 ### Special IPs
+
 - `127.0.0.1` - Localhost (this computer)
 - `0.0.0.0` - Block/blackhole (commonly used for ad blocking)
 - `::1` - IPv6 localhost
@@ -177,6 +193,7 @@ fe80::1         link-local
 ### Clearing Data
 
 To reset all settings and profiles:
+
 1. Open browser DevTools (F12)
 2. Go to Application → Storage → Local Storage
 3. Delete `thosts-settings` and `thosts-profiles`
@@ -185,9 +202,11 @@ To reset all settings and profiles:
 ## Updates & Support
 
 ### Checking for Updates
+
 - Currently manual - check GitHub releases
 
 ### Reporting Issues
+
 - GitHub Issues: [Create an issue](https://github.com/yourusername/thosts/issues)
 - Include: OS, app version, error message, steps to reproduce
 

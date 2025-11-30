@@ -23,13 +23,13 @@ export const zhTW: Translations = {
         fontSize: '字體大小 (px)',
     },
     adminAuth: {
-        title: '需要管理員身份驗證',
+        title: '需要管理員權限',
         subtitle: '系統將顯示身份驗證對話框以授予權限。',
-        systemDialogNotice: '點擊"驗證"繼續。系統將顯示身份驗證對話框，要求輸入管理員密碼。請在系統對話框中輸入您的憑證。',
-        authenticate: '驗證',
+        systemDialogNotice: '此操作需要管理員權限來修改系統 hosts 檔案。\n\n點擊"確定"後，系統將顯示身份驗證對話框，要求輸入管理員密碼。',
+        authenticate: '確定',
         authenticating: '等待身份驗證...',
         notice: '此操作需要管理員權限來修改系統 hosts 檔案。系統將提示您進行身份驗證。',
-        permissionDenied: '權限被拒絕或身份驗證已取消。',
+        permissionDenied: '操作已取消',
         invalidCredentials: '身份驗證失敗。請重試。',
     },
 };

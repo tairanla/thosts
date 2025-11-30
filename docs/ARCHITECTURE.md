@@ -6,7 +6,7 @@ thosts is a cross-platform hosts file management application built using the **T
 
 ## Architecture Diagram
 
-```
+```txt
 ┌─────────────────────────────────────────────────────────┐
 │                    thosts Application                    │
 ├─────────────────────────────────────────────────────────┤
@@ -54,6 +54,7 @@ thosts is a cross-platform hosts file management application built using the **T
 ## Technology Stack
 
 ### Frontend
+
 - **React 19**: UI framework
 - **TypeScript**: Type safety
 - **Vite**: Build tool and dev server
@@ -61,6 +62,7 @@ thosts is a cross-platform hosts file management application built using the **T
 - **Vanilla CSS**: Styling with CSS variables
 
 ### Backend
+
 - **Tauri 2.0**: Cross-platform framework
 - **Rust**: System-level operations
 - **std::fs**: File system operations
@@ -70,6 +72,7 @@ thosts is a cross-platform hosts file management application built using the **T
 ### UI Components
 
 #### 1. MainLayout (`layouts/MainLayout.tsx`)
+
 - **Purpose**: Root layout component
 - **State Management**:
   - Selected profile ID
@@ -84,6 +87,7 @@ thosts is a cross-platform hosts file management application built using the **T
   - Call Tauri commands
 
 #### 2. Sidebar (`components/Sidebar/Sidebar.tsx`)
+
 - **Purpose**: Profile navigation
 - **Props**:
   - `profiles`: Array of host profiles
@@ -98,6 +102,7 @@ thosts is a cross-platform hosts file management application built using the **T
   - Settings button
 
 #### 3. Editor (`components/Editor/Editor.tsx`)
+
 - **Purpose**: Code editor for hosts content
 - **Props**:
   - `content`: Text content to edit
@@ -110,6 +115,7 @@ thosts is a cross-platform hosts file management application built using the **T
   - Configurable font size
 
 #### 4. Settings (`components/Settings/Settings.tsx`)
+
 - **Purpose**: Application settings panel
 - **Uses**: SettingsContext
 - **Features**:
@@ -121,6 +127,7 @@ thosts is a cross-platform hosts file management application built using the **T
 ### Context & State Management
 
 #### SettingsContext (`contexts/SettingsContext.tsx`)
+
 ```typescript
 interface Settings {
   theme: 'light' | 'dark' | 'system';
@@ -140,6 +147,7 @@ interface Settings {
 ### Services & Utilities
 
 #### hostsService (`services/hostsService.ts`)
+
 ```typescript
 interface HostsProfile {
   id: string;
@@ -157,6 +165,7 @@ interface HostsProfile {
   - `writeHosts(path, content)`: Write file content
 
 #### profileStorage (`utils/storage.ts`)
+
 - **Purpose**: LocalStorage abstraction
 - **Methods**:
   - `save(profiles)`: Persist profiles
@@ -164,6 +173,7 @@ interface HostsProfile {
   - `clear()`: Remove all data
 
 #### Translations (`locales/`)
+
 - **Structure**: Type-safe translation objects
 - **Languages**: en, zh-CN, zh-TW
 - **Hook**: `useTranslation()` for accessing current language
@@ -172,7 +182,7 @@ interface HostsProfile {
 
 ### 1. Loading System Hosts
 
-```
+```txt
 User launches app
     ↓
 MainLayout.useEffect()
@@ -190,7 +200,7 @@ Update editor content
 
 ### 2. Saving Changes
 
-```
+```txt
 User clicks Save button
     ↓
 handleSave()
@@ -208,7 +218,7 @@ Show success message
 
 ### 3. Changing Settings
 
-```
+```txt
 User changes theme/language/font
     ↓
 updateSettings() in SettingsContext
@@ -226,6 +236,7 @@ useEffect triggers:
 ### Commands (`src-tauri/src/lib.rs`)
 
 #### `get_hosts_path() -> String`
+
 ```rust
 fn get_hosts_path() -> String {
     if cfg!(target_os = "windows") {
@@ -237,6 +248,7 @@ fn get_hosts_path() -> String {
 ```
 
 #### `read_hosts(path: &str) -> Result<String, String>`
+
 ```rust
 fn read_hosts(path: &str) -> Result<String, String> {
     fs::read_to_string(path).map_err(|e| e.to_string())
@@ -244,6 +256,7 @@ fn read_hosts(path: &str) -> Result<String, String> {
 ```
 
 #### `write_hosts(path: &str, content: &str) -> Result<(), String>`
+
 ```rust
 fn write_hosts(path: &str, content: &str) -> Result<(), String> {
     fs::write(path, content).map_err(|e| e.to_string())
@@ -278,6 +291,7 @@ fn write_hosts(path: &str, content: &str) -> Result<(), String> {
 ```
 
 ### CSS Variables
+
 - `--bg-primary, --bg-secondary, --bg-tertiary`: Background colors
 - `--text-primary, --text-secondary, --text-tertiary`: Text colors
 - `--accent-color, --accent-hover`: Accent colors
@@ -297,6 +311,7 @@ fn write_hosts(path: &str, content: &str) -> Result<(), String> {
 ## Future Architecture Improvements
 
 ### Planned Features
+
 1. **State Management**: Consider Zustand or Jotai for complex state
 2. **Virtual Scrolling**: For large hosts files (1000+ lines)
 3. **Web Workers**: For hosts file parsing/validation
@@ -304,6 +319,7 @@ fn write_hosts(path: &str, content: &str) -> Result<(), String> {
 5. **Rust Parser**: Move hosts parsing to Rust for better performance
 
 ### Scalability
+
 - **Plugin System**: Allow community extensions
 - **Profile Sync**: Cloud backend for cross-device sync
 - **Multi-Window**: Support multiple editor windows
@@ -312,18 +328,21 @@ fn write_hosts(path: &str, content: &str) -> Result<(), String> {
 ## Build & Deployment
 
 ### Development
+
 ```bash
 npm run dev          # Frontend dev server
 npm run tauri dev    # Full app with hot reload
 ```
 
 ### Production
+
 ```bash
 npm run build        # Build frontend
 npm run tauri build  # Build native app
 ```
 
 ### Output
+
 - **Windows**: `.exe` installer
 - **MacOS**: `.dmg` or `.app` bundle
 - **Linux**: `.deb`, `.rpm`, or `.AppImage`

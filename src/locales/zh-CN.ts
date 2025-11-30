@@ -23,13 +23,13 @@ export const zhCN: Translations = {
         fontSize: '字体大小 (px)',
     },
     adminAuth: {
-        title: '需要管理员身份验证',
+        title: '需要管理员权限',
         subtitle: '系统将显示身份验证对话框以授予权限。',
-        systemDialogNotice: '点击"验证"继续。系统将显示身份验证对话框，要求输入管理员密码。请在系统对话框中输入您的凭据。',
-        authenticate: '验证',
+        systemDialogNotice: '此操作需要管理员权限来修改系统 hosts 文件。\n\n点击"确定"后，系统将显示身份验证对话框，要求输入管理员密码。',
+        authenticate: '确定',
         authenticating: '等待身份验证...',
         notice: '此操作需要管理员权限来修改系统 hosts 文件。系统将提示您进行身份验证。',
-        permissionDenied: '权限被拒绝或身份验证已取消。',
+        permissionDenied: '操作已取消',
         invalidCredentials: '身份验证失败。请重试。',
     },
 };

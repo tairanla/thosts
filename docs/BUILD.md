@@ -3,6 +3,7 @@
 ## Build Status
 
 ✅ **Successfully builds**:
+
 - `.deb` package (Debian/Ubuntu)
 - `.rpm` package (Fedora/RHEL/openSUSE)
 
@@ -11,24 +12,28 @@
 ## Quick Build Commands
 
 ### Development Build
+
 ```bash
 # Run in development mode (with hot reload)
 npm run tauri dev
 ```
 
 ### Production Build
+
 ```bash
 # Build optimized production bundle
 npm run tauri build
 ```
 
 This will create:
+
 - **DEB**: `/src-tauri/target/release/bundle/deb/thosts_0.1.0_amd64.deb`
 - **RPM**: `/src-tauri/target/release/bundle/rpm/thosts-0.1.0-1.x86_64.rpm`
 
 ## Installation
 
 ### Debian/Ubuntu (DEB)
+
 ```bash
 sudo dpkg -i src-tauri/target/release/bundle/deb/thosts_0.1.0_amd64.deb
 
@@ -37,6 +42,7 @@ sudo apt-get install -f
 ```
 
 ### Fedora/RHEL/openSUSE (RPM)
+
 ```bash
 sudo rpm -i src-tauri/target/release/bundle/rpm/thosts-0.1.0-1.x86_64.rpm
 
@@ -62,20 +68,20 @@ The bundle targets are configured in `src-tauri/tauri.conf.json`:
 
 You can customize the `targets` array:
 
-- **Linux**: 
+- **Linux**:
   - `"deb"` - Debian package
   - `"rpm"` - RPM package
   - `"appimage"` - AppImage (requires xdg-utils)
   
-- **macOS**: 
+- **macOS**:
   - `"dmg"` - DMG installer
   - `"app"` - .app bundle
   
-- **Windows**: 
+- **Windows**:
   - `"msi"` - MSI installer
   - `"nsis"` - NSIS installer
 
-- **All platforms**: 
+- **All platforms**:
   - `"all"` - All available formats for current platform
 
 ## AppImage Support (Optional)
@@ -94,6 +100,7 @@ sudo pacman -S xdg-utils
 ```
 
 Then update `tauri.conf.json`:
+
 ```json
 "targets": ["deb", "rpm", "appimage"]
 ```
@@ -102,7 +109,7 @@ Then update `tauri.conf.json`:
 
 After a successful build, you'll find:
 
-```
+```txt
 src-tauri/target/release/
 ├── bundle/
 │   ├── deb/
@@ -128,10 +135,11 @@ You can run the binary without installing:
 To build for different platforms:
 
 ### From Linux → Windows
+
 ```bash
 # Install cross-compilation tools
 sudo apt install nsis
-sudo apt install lld llvm
+sudo apt install lld llvm clang
 rustup target add x86_64-pc-windows-msvc
 cargo install --locked cargo-xwin
 
@@ -140,7 +148,9 @@ npm run tauri build -- --runner cargo-xwin --target x86_64-pc-windows-msvc
 ```
 
 ### From Linux → macOS
+
 Building for macOS from Linux requires OSX SDK (complex setup). Consider using:
+
 - GitHub Actions for automated cross-platform builds
 - Docker containers with cross-compilation tools
 
@@ -199,6 +209,7 @@ jobs:
 ### Code Signing (for production)
 
 **macOS:**
+
 ```bash
 # Requires Apple Developer account
 codesign --sign "Developer ID Application: Your Name" \
@@ -206,6 +217,7 @@ codesign --sign "Developer ID Application: Your Name" \
 ```
 
 **Windows:**
+
 ```powershell
 # Requires code signing certificate
 signtool sign /f certificate.pfx /p password \
@@ -227,6 +239,7 @@ signtool sign /f certificate.pfx /p password \
 ### Build Fails with Missing Dependencies
 
 **Linux:**
+
 ```bash
 # Ubuntu/Debian
 sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev \
@@ -240,6 +253,7 @@ sudo dnf install gtk3-devel webkit2gtk4.0-devel \
 ### Cargo Warning
 
 If you see warnings during build:
+
 ```bash
 cd src-tauri
 cargo fix --lib -p thosts --allow-dirty
