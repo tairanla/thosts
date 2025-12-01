@@ -181,8 +181,10 @@ export const MainLayout: React.FC = () => {
             // This allows saving when profiles are toggled
             if (!systemPath) return;
 
-            // Calculate merged content: system hosts + active local/remote profiles
-            const mergedContent = calculateMergedHosts();
+            // Use content directly as merged content.
+            // In System Hosts view, the editor content IS the merged content we want to save.
+            // This ensures manual edits in the editor are preserved.
+            const mergedContent = content;
 
             // Check if merged content is different from what's currently in the file
             // We compare with originalContent (the actual system hosts file content)
@@ -197,13 +199,16 @@ export const MainLayout: React.FC = () => {
                 await hostsService.writeHosts(systemPath, mergedContent);
 
                 // Update local state
-                // Note: We don't update system profile content with merged content
-                // System profile content should remain as the original system hosts (without profiles)
-                // The merged content is what gets written to the file
-                setOriginalContent(mergedContent); // Update original content to reflect what's in the file now
+                // 1. Update profiles: extract pure system hosts content
+                const newSystemContent = extractOriginalSystemHosts(mergedContent);
+                setProfiles(prev => prev.map(p =>
+                    p.id === '1' ? { ...p, content: newSystemContent } : p
+                ));
 
-                // Update the editor content to match what was saved
-                setContent(mergedContent);
+                // 2. Update original content to reflect what's in the file now
+                setOriginalContent(mergedContent);
+
+                // 3. Editor content is already up to date (mergedContent)
 
                 setStatus(t.status.saved);
                 setTimeout(() => setStatus(''), 3000);
@@ -230,8 +235,13 @@ export const MainLayout: React.FC = () => {
                     await hostsService.writeHostsWithAdmin(systemPath, mergedContent);
 
                     // Update local state on success
+                    const newSystemContent = extractOriginalSystemHosts(mergedContent);
+                    setProfiles(prev => prev.map(p =>
+                        p.id === '1' ? { ...p, content: newSystemContent } : p
+                    ));
+
                     setOriginalContent(mergedContent);
-                    setContent(mergedContent);
+                    // setContent(mergedContent); // Already correct
 
                     setStatus(t.status.saved);
                     setTimeout(() => setStatus(''), 3000);
@@ -252,7 +262,7 @@ export const MainLayout: React.FC = () => {
             setStatus(t.status.savedLocal);
             setTimeout(() => setStatus(''), 3000);
         }
-    }, [content, originalContent, selectedId, systemPath, calculateMergedHosts]);
+    }, [content, originalContent, selectedId, systemPath]);
 
     // Keyboard shortcut handler (Ctrl+S / Cmd+S)
     useEffect(() => {
@@ -387,10 +397,8 @@ export const MainLayout: React.FC = () => {
     }, [selectedId, systemPath, originalContent]);
 
     // Check if content has been modified
-    // For system hosts, check if merged content differs from original
-    const isContentModified = selectedId === '1'
-        ? calculateMergedHosts() !== originalContent
-        : content !== originalContent;
+    // Simply check if current editor content differs from original
+    const isContentModified = content !== originalContent;
 
     const handleAddProfile = async () => {
         const name = prompt(t.dialog.addProfile.message);
