@@ -1,4 +1,5 @@
 
+import { confirm } from '@tauri-apps/plugin-dialog';
 import { RefreshCw, Save } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Editor } from '../components/Editor/Editor';
@@ -417,6 +418,28 @@ export const MainLayout: React.FC = () => {
         setSelectedId(newProfile.id);
     };
 
+    const handleDeleteProfile = useCallback(async (id: string) => {
+        const confirmed = await confirm('Are you sure you want to delete this profile?', {
+            title: 'Delete Profile',
+            kind: 'warning',
+            okLabel: 'Delete',
+            cancelLabel: 'Cancel'
+        });
+
+        if (!confirmed) return;
+
+        setProfiles(prev => {
+            const updated = prev.filter(p => p.id !== id);
+
+            // If the deleted profile was selected, switch to system hosts
+            if (selectedId === id) {
+                setSelectedId('1');
+            }
+
+            return updated;
+        });
+    }, [selectedId]);
+
     return (
         <div className="app-container">
             <Sidebar
@@ -425,6 +448,7 @@ export const MainLayout: React.FC = () => {
                 selectedId={selectedId}
                 onToggle={handleToggleProfile}
                 onAddProfile={handleAddProfile}
+                onDeleteProfile={handleDeleteProfile}
             />
 
             <div className="main-content">

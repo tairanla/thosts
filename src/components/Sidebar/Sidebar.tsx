@@ -1,9 +1,10 @@
 import { getVersion } from '@tauri-apps/api/app';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { FileText, Github, Plus, Power, PowerOff, Settings } from 'lucide-react';
+import { FileText, Github, Plus, Power, PowerOff, Settings, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { HostsProfile } from '../../services/hostsService';
+import './Sidebar.css';
 
 interface SidebarProps {
     profiles: HostsProfile[];
@@ -11,9 +12,10 @@ interface SidebarProps {
     onSelect: (id: string) => void;
     onToggle: (id: string, active: boolean) => void;
     onAddProfile: () => void;
+    onDeleteProfile: (id: string) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect, onToggle, onAddProfile }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect, onToggle, onAddProfile, onDeleteProfile }) => {
     const { t } = useTranslation();
     const [appVersion, setAppVersion] = useState('0.1.0');
 
@@ -59,16 +61,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
                             <span className="profile-name">{profile.name}</span>
                             <span className="profile-type">{profile.type}</span>
                         </div>
-                        <button
-                            className={`profile-toggle ${profile.active ? 'active' : ''}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onToggle(profile.id, !profile.active);
-                            }}
-                            title={profile.active ? 'Disable' : 'Enable'}
-                        >
-                            {profile.active ? <Power size={16} /> : <PowerOff size={16} />}
-                        </button>
+                        <div className="flex items-center gap-1">
+                            {profile.type !== 'system' && (
+                                <button
+                                    className="profile-toggle delete-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDeleteProfile(profile.id);
+                                    }}
+                                    title="Delete"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            )}
+                            <button
+                                className={`profile-toggle ${profile.active ? 'active' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggle(profile.id, !profile.active);
+                                }}
+                                title={profile.active ? 'Disable' : 'Enable'}
+                            >
+                                {profile.active ? <Power size={16} /> : <PowerOff size={16} />}
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>
