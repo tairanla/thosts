@@ -1,4 +1,5 @@
 import { getVersion } from '@tauri-apps/api/app';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { FileText, Github, Plus, Power, PowerOff, Settings } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -78,7 +79,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
                     <div className="version-info ml-2 text-sm">v{appVersion}</div>
                 </div>
                 <div className="flex justify-end gap-2 items-center h-full">
-                    <button className="icon-btn w-10 h-10" onClick={() => window.open('https://github.com/tairanla/thosts', '_blank')} title="GitHub"><Github size={18} /></button>
+                    <button
+                        className="icon-btn w-10 h-10"
+                        onClick={() => openUrl('https://github.com/tairanla/thosts')}
+                        title="GitHub"
+                    >
+                        <Github size={18} />
+                    </button>
                     <button className="icon-btn w-10 h-10" onClick={() => onSelect('settings')} title={t.common.settings}><Settings size={18} /></button>
                 </div>
             </div>
