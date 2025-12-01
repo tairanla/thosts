@@ -118,13 +118,17 @@ try {{
 }
 
 async fn write_hosts_unix(path: &str, content: &str) -> Result<(), String> {
-    // Create a temporary file with the content
-    let temp_path = format!("{}.tmp", path);
+    // Create a temporary file with the content in the system temp directory
+    // We cannot create it in /etc/ because standard users don't have write permissions there
+    let temp_dir = env::temp_dir();
+    let temp_path = temp_dir.join("thosts_hosts.tmp");
+    let temp_path_str = temp_path.to_str().ok_or("Invalid temp path")?.to_string();
+
     fs::write(&temp_path, content)
         .map_err(|e| format!("Failed to create temp file: {}", e))?;
 
     // Execute the command in a blocking task with timeout to avoid infinite blocking
-    let temp_path_clone = temp_path.clone();
+    let temp_path_clone = temp_path_str.clone();
     let path_clone = path.to_string();
     
     let result = tokio::time::timeout(
@@ -133,8 +137,11 @@ async fn write_hosts_unix(path: &str, content: &str) -> Result<(), String> {
         if cfg!(target_os = "linux") {
             // Try pkexec first (polkit - shows system authentication dialog)
             // pkexec is designed for GUI applications and will show a system dialog
+            // We use /bin/cp to be safe, and -f to force overwrite
+            let cp_cmd = if std::path::Path::new("/bin/cp").exists() { "/bin/cp" } else { "cp" };
+
             let pkexec_result = Command::new("pkexec")
-                .args(["cp", &temp_path_clone, &path_clone])
+                .args([cp_cmd, "-f", &temp_path_clone, &path_clone])
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
                 .stderr(Stdio::piped())
@@ -239,6 +246,7 @@ async fn write_hosts_unix(path: &str, content: &str) -> Result<(), String> {
     })).await;
 
     // Clean up temp file
+    // We ignore errors here as the file might have been moved or deleted
     let _ = fs::remove_file(&temp_path);
 
     match result {
