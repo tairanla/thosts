@@ -32,4 +32,34 @@ export const en: Translations = {
         permissionDenied: 'Operation canceled',
         invalidCredentials: 'Authentication failed. Please try again.',
     },
+    dialog: {
+        deleteProfile: {
+            title: 'Delete Profile',
+            message: 'Are you sure you want to delete this profile?',
+            confirm: 'Delete',
+            cancel: 'Cancel',
+        },
+        addProfile: {
+            message: 'Enter profile name:',
+        },
+    },
+    status: {
+        loaded: 'Loaded system hosts',
+        error: 'Error loading hosts',
+        saved: 'Saved successfully',
+        savedLocal: 'Profile saved (local)',
+        failedAdmin: 'Failed to save with admin privileges',
+    },
+    sidebar: {
+        profiles: 'Profiles',
+        github: 'GitHub',
+        enable: 'Enable',
+        disable: 'Disable',
+        delete: 'Delete',
+        types: {
+            system: 'System',
+            local: 'Local',
+            remote: 'Remote',
+        },
+    },
 };

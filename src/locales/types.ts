@@ -30,4 +30,34 @@ export interface Translations {
         permissionDenied: string;
         invalidCredentials: string;
     };
+    dialog: {
+        deleteProfile: {
+            title: string;
+            message: string;
+            confirm: string;
+            cancel: string;
+        };
+        addProfile: {
+            message: string;
+        };
+    };
+    status: {
+        loaded: string;
+        error: string;
+        saved: string;
+        savedLocal: string;
+        failedAdmin: string;
+    };
+    sidebar: {
+        profiles: string;
+        github: string;
+        enable: string;
+        disable: string;
+        delete: string;
+        types: {
+            system: string;
+            local: string;
+            remote: string;
+        };
+    };
 }

@@ -32,4 +32,34 @@ export const zhCN: Translations = {
         permissionDenied: '操作已取消',
         invalidCredentials: '身份验证失败。请重试。',
     },
+    dialog: {
+        deleteProfile: {
+            title: '删除配置',
+            message: '确定要删除此配置吗？',
+            confirm: '删除',
+            cancel: '取消',
+        },
+        addProfile: {
+            message: '请输入配置名称：',
+        },
+    },
+    status: {
+        loaded: '系统 Hosts 已加载',
+        error: '加载 Hosts 失败',
+        saved: '保存成功',
+        savedLocal: '配置已保存 (本地)',
+        failedAdmin: '管理员权限保存失败',
+    },
+    sidebar: {
+        profiles: '个配置',
+        github: 'GitHub',
+        enable: '启用',
+        disable: '禁用',
+        delete: '删除',
+        types: {
+            system: '系统',
+            local: '本地',
+            remote: '远程',
+        },
+    },
 };

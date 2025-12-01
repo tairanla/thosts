@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
             {/* Profile List */}
             <div className="profile-list">
                 <div className="profile-list-header">
-                    <span className="profile-count">{profiles.length} Profiles</span>
+                    <span className="profile-count">{profiles.length} {t.sidebar.profiles}</span>
                 </div>
                 {profiles.map((profile) => (
                     <div
@@ -59,7 +59,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
                         </div>
                         <div className="profile-info">
                             <span className="profile-name">{profile.name}</span>
-                            <span className="profile-type">{profile.type}</span>
+                            <span className="profile-type">
+                                {profile.type === 'system' ? t.sidebar.types.system :
+                                    profile.type === 'local' ? t.sidebar.types.local :
+                                        profile.type === 'remote' ? t.sidebar.types.remote : profile.type}
+                            </span>
                         </div>
                         <div className="flex items-center gap-1">
                             {profile.type !== 'system' && (
@@ -69,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
                                         e.stopPropagation();
                                         onDeleteProfile(profile.id);
                                     }}
-                                    title="Delete"
+                                    title={t.sidebar.delete}
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -80,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
                                     e.stopPropagation();
                                     onToggle(profile.id, !profile.active);
                                 }}
-                                title={profile.active ? 'Disable' : 'Enable'}
+                                title={profile.active ? t.sidebar.disable : t.sidebar.enable}
                             >
                                 {profile.active ? <Power size={16} /> : <PowerOff size={16} />}
                             </button>
@@ -98,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
                     <button
                         className="icon-btn w-10 h-10"
                         onClick={() => openUrl('https://github.com/tairanla/thosts')}
-                        title="GitHub"
+                        title={t.sidebar.github}
                     >
                         <Github size={18} />
                     </button>

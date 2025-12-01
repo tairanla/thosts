@@ -126,10 +126,10 @@ export const MainLayout: React.FC = () => {
                 return updated;
             });
 
-            setStatus('Loaded system hosts');
+            setStatus(t.status.loaded);
         } catch (error) {
             console.error('Failed to load hosts:', error);
-            setStatus('Error loading hosts');
+            setStatus(t.status.error);
         } finally {
             setLoading(false);
         }
@@ -205,7 +205,7 @@ export const MainLayout: React.FC = () => {
                 // Update the editor content to match what was saved
                 setContent(mergedContent);
 
-                setStatus('Saved successfully');
+                setStatus(t.status.saved);
                 setTimeout(() => setStatus(''), 3000);
                 setLoading(false);
             } catch (error) {
@@ -233,12 +233,12 @@ export const MainLayout: React.FC = () => {
                     setOriginalContent(mergedContent);
                     setContent(mergedContent);
 
-                    setStatus('Saved successfully');
+                    setStatus(t.status.saved);
                     setTimeout(() => setStatus(''), 3000);
                     setLoading(false);
                 } catch (adminError) {
                     console.error('Failed to save hosts with admin privileges:', adminError);
-                    setStatus('Failed to save with admin privileges');
+                    setStatus(t.status.failedAdmin);
                     setTimeout(() => setStatus(''), 3000);
                     setLoading(false);
                 }
@@ -249,7 +249,7 @@ export const MainLayout: React.FC = () => {
                 p.id === selectedId ? { ...p, content } : p
             ));
             setOriginalContent(content); // Update original content after save
-            setStatus('Profile saved (local)');
+            setStatus(t.status.savedLocal);
             setTimeout(() => setStatus(''), 3000);
         }
     }, [content, originalContent, selectedId, systemPath, calculateMergedHosts]);
@@ -332,7 +332,7 @@ export const MainLayout: React.FC = () => {
                             // Update originalContent to reflect what's in the file now
                             setOriginalContent(newMergedContent);
 
-                            setStatus('Saved successfully');
+                            setStatus(t.status.saved);
                             setTimeout(() => setStatus(''), 3000);
                             setLoading(false);
                         } catch (error) {
@@ -360,12 +360,12 @@ export const MainLayout: React.FC = () => {
                                 setOriginalContent(newMergedContent);
                                 setContent(newMergedContent);
 
-                                setStatus('Saved successfully');
+                                setStatus(t.status.saved);
                                 setTimeout(() => setStatus(''), 3000);
                                 setLoading(false);
                             } catch (adminError) {
                                 console.error('Failed to save hosts with admin privileges:', adminError);
-                                setStatus('Failed to save with admin privileges');
+                                setStatus(t.status.failedAdmin);
                                 setTimeout(() => setStatus(''), 3000);
                                 setLoading(false);
                             }
@@ -393,7 +393,7 @@ export const MainLayout: React.FC = () => {
         : content !== originalContent;
 
     const handleAddProfile = async () => {
-        const name = prompt('Enter profile name:');
+        const name = prompt(t.dialog.addProfile.message);
         if (!name) return;
 
         // Get current system hosts content
@@ -419,11 +419,11 @@ export const MainLayout: React.FC = () => {
     };
 
     const handleDeleteProfile = useCallback(async (id: string) => {
-        const confirmed = await confirm('Are you sure you want to delete this profile?', {
-            title: 'Delete Profile',
+        const confirmed = await confirm(t.dialog.deleteProfile.message, {
+            title: t.dialog.deleteProfile.title,
             kind: 'warning',
-            okLabel: 'Delete',
-            cancelLabel: 'Cancel'
+            okLabel: t.dialog.deleteProfile.confirm,
+            cancelLabel: t.dialog.deleteProfile.cancel
         });
 
         if (!confirmed) return;
