@@ -2,6 +2,12 @@ use std::fs;
 use std::io::Write;
 use std::process::{Command, Stdio};
 use std::env;
+use std::sync::Mutex;
+use tauri::State;
+
+struct AppState {
+    sudo_pass: Mutex<Option<String>>,
+}
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -28,17 +34,51 @@ fn write_hosts(path: &str, content: &str) -> Result<(), String> {
     fs::write(path, content).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn set_sudo_pass(state: State<'_, AppState>, password: String) -> Result<bool, String> {
+    // Verify password with sudo -S -v
+    let mut child = Command::new("sudo")
+        .args(["-S", "-v", "-k"]) // -k resets timestamp to ensure we verify the password
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin.write_all(password.as_bytes()).map_err(|e| e.to_string())?;
+        stdin.write_all(b"\n").map_err(|e| e.to_string())?;
+    }
+
+    let status = child.wait().map_err(|e| e.to_string())?;
+
+    if status.success() {
+        if let Ok(mut cache) = state.sudo_pass.lock() {
+            *cache = Some(password);
+            Ok(true)
+        } else {
+            Err("Failed to lock sudo cache".to_string())
+        }
+    } else {
+        Ok(false) // Invalid password
+    }
+}
+
 /// Write hosts file with system authentication dialog
 /// This will trigger the system's native authentication dialog:
 /// - Windows: UAC (User Account Control) dialog
-/// - Linux: polkit/pkexec dialog or sudo password prompt
+/// - Linux: sudo (if cached) or polkit/pkexec dialog
 /// - macOS: sudo password prompt or system authentication dialog
 #[tauri::command]
-async fn write_hosts_with_admin(path: String, content: String) -> Result<(), String> {
+async fn write_hosts_with_admin(
+    path: String,
+    content: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
     if cfg!(target_os = "windows") {
         write_hosts_windows(&path, &content).await
     } else {
-        write_hosts_unix(&path, &content).await
+        write_hosts_unix(&path, &content, state).await
     }
 }
 
@@ -117,7 +157,7 @@ try {{
     }
 }
 
-async fn write_hosts_unix(path: &str, content: &str) -> Result<(), String> {
+async fn write_hosts_unix(path: &str, content: &str, state: State<'_, AppState>) -> Result<(), String> {
     // Create a temporary file with the content in the system temp directory
     // We cannot create it in /etc/ because standard users don't have write permissions there
     let temp_dir = env::temp_dir();
@@ -131,11 +171,38 @@ async fn write_hosts_unix(path: &str, content: &str) -> Result<(), String> {
     let temp_path_clone = temp_path_str.clone();
     let path_clone = path.to_string();
     
+    // Check if we have a cached sudo password
+    let cached_pass = state.sudo_pass.lock().ok().and_then(|guard| guard.clone());
+
     let result = tokio::time::timeout(
         std::time::Duration::from_secs(300), // 5 minutes timeout
         tokio::task::spawn_blocking(move || -> Result<(), String> {
         if cfg!(target_os = "linux") {
-            // Try pkexec first (polkit - shows system authentication dialog)
+            // Priority 1: Try cached password with sudo -S
+            if let Some(password) = cached_pass {
+                let mut child = Command::new("sudo")
+                    .args(["-S", "cp", "-f", &temp_path_clone, &path_clone])
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .map_err(|e| e.to_string())?;
+
+                if let Some(mut stdin) = child.stdin.take() {
+                    stdin.write_all(password.as_bytes()).map_err(|e| e.to_string())?;
+                    stdin.write_all(b"\n").map_err(|e| e.to_string())?;
+                }
+
+                let output = child.wait_with_output().map_err(|e| e.to_string())?;
+                if output.status.success() {
+                    return Ok(());
+                }
+                // If sudo failed, maybe password expired or changed.
+                // We don't automatically clear cache here as it might be a different error,
+                // but effectively we fall back to pkexec below.
+            }
+
+            // Priority 2: Try pkexec (polkit - shows system authentication dialog)
             // pkexec is designed for GUI applications and will show a system dialog
             // We use /bin/cp to be safe, and -f to force overwrite
             let cp_cmd = if std::path::Path::new("/bin/cp").exists() { "/bin/cp" } else { "cp" };
@@ -167,7 +234,7 @@ async fn write_hosts_unix(path: &str, content: &str) -> Result<(), String> {
                 }
             }
             
-            // Fallback to sudo
+            // Priority 3: Fallback to sudo (interactive/terminal)
             // Note: In WSL or non-GUI environments, sudo may not work properly
             // as it requires interactive TTY input. We'll try it but expect it may fail.
             let sudo_result = Command::new("sudo")
@@ -268,6 +335,9 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .manage(AppState {
+            sudo_pass: Mutex::new(None),
+        })
         .setup(|app| {
             let app_handle = app.handle();
             
@@ -338,7 +408,8 @@ pub fn run() {
             get_hosts_path,
             read_hosts,
             write_hosts,
-            write_hosts_with_admin
+            write_hosts_with_admin,
+            set_sudo_pass
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

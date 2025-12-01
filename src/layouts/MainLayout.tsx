@@ -2,6 +2,7 @@
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { RefreshCw, Save } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { PasswordDialog } from '../components/Dialog/PasswordDialog';
 import { Editor } from '../components/Editor/Editor';
 import { Settings } from '../components/Settings/Settings';
 import { Sidebar } from '../components/Sidebar/Sidebar';
@@ -17,6 +18,8 @@ export const MainLayout: React.FC = () => {
     const [systemPath, setSystemPath] = useState('');
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
+    const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+    const [pendingSaveContent, setPendingSaveContent] = useState<string | null>(null);
 
     const [profiles, setProfiles] = useState<HostsProfile[]>(() => {
         const saved = profileStorage.load();
@@ -136,44 +139,44 @@ export const MainLayout: React.FC = () => {
     };
 
     // Calculate merged hosts content: system hosts + active local/remote profiles
+    // Note: This function is currently unused in the render path as we use direct content manipulation
+    // for immediate feedback, but it might be useful for verification or export features in the future.
+    /*
     const calculateMergedHosts = useCallback((): string => {
-        // Always use the original system hosts content from the profile (not the merged preview)
-        // This ensures we don't double-merge when saving
-        const systemProfile = profiles.find(p => p.id === '1');
-        const systemContent = systemProfile?.content || '';
-
-        // Get active local and remote profiles (excluding system profile)
-        const activeProfiles = profiles.filter(p =>
-            p.active &&
-            p.id !== '1' &&
-            (p.type === 'local' || p.type === 'remote') &&
-            p.content.trim().length > 0
-        );
-
-        if (activeProfiles.length === 0) {
-            // No active profiles, just return system content
-            return systemContent;
-        }
-
-        // Build merged content
-        const parts: string[] = [];
-
-        // Start with system hosts (original content, not merged)
-        if (systemContent.trim()) {
-            parts.push(systemContent.trim());
-        }
-
-        // Add separator and active profiles
-        activeProfiles.forEach((profile) => {
-            if (profile.content.trim()) {
-                parts.push('');
-                parts.push(`# === ${profile.name} ===`);
-                parts.push(profile.content.trim());
-            }
-        });
-
-        return parts.join('\n');
+        // ... implementation ...
     }, [profiles]);
+    */
+
+    const handlePasswordSubmit = async (password: string) => {
+        setShowPasswordDialog(false);
+        if (!pendingSaveContent) return;
+
+        try {
+            setLoading(true);
+            const success = await hostsService.setSudoPassword(password);
+            if (success) {
+                // Password valid and cached, retry save
+                await hostsService.writeHostsWithAdmin(systemPath, pendingSaveContent);
+
+                // Update state on success
+                const newSystemContent = extractOriginalSystemHosts(pendingSaveContent);
+                setProfiles(prev => prev.map(p =>
+                    p.id === '1' ? { ...p, content: newSystemContent } : p
+                ));
+                setOriginalContent(pendingSaveContent);
+                setStatus(t.status.saved);
+            } else {
+                setStatus('Invalid password');
+            }
+        } catch (error) {
+            console.error('Save failed:', error);
+            setStatus(t.status.failedAdmin);
+        } finally {
+            setLoading(false);
+            setPendingSaveContent(null);
+            setTimeout(() => setStatus(''), 3000);
+        }
+    };
 
     const handleSave = useCallback(async () => {
         if (selectedId === '1') {
@@ -216,42 +219,41 @@ export const MainLayout: React.FC = () => {
             } catch (error) {
                 console.error('Failed to save hosts without admin privileges:', error);
 
-                // If save failed, request admin permission using Tauri dialog
-                const hasPermission = await hostsService.requestAdminPermission(
-                    t.adminAuth.title,
-                    t.adminAuth.systemDialogNotice,
-                    t.adminAuth.authenticate,
-                    t.common.cancel
-                );
-                if (!hasPermission) {
-                    setStatus(t.adminAuth.permissionDenied);
-                    setTimeout(() => setStatus(''), 3000);
-                    setLoading(false);
-                    return;
-                }
-
-                // User confirmed, try to save with admin privileges
+                // Check if we can do silent admin save (cached password)
                 try {
+                    setLoading(true);
                     await hostsService.writeHostsWithAdmin(systemPath, mergedContent);
 
-                    // Update local state on success
+                    // Success with cached password or pkexec
                     const newSystemContent = extractOriginalSystemHosts(mergedContent);
                     setProfiles(prev => prev.map(p =>
                         p.id === '1' ? { ...p, content: newSystemContent } : p
                     ));
-
                     setOriginalContent(mergedContent);
-                    // setContent(mergedContent); // Already correct
-
                     setStatus(t.status.saved);
                     setTimeout(() => setStatus(''), 3000);
                     setLoading(false);
+                    return;
                 } catch (adminError) {
-                    console.error('Failed to save hosts with admin privileges:', adminError);
-                    setStatus(t.status.failedAdmin);
-                    setTimeout(() => setStatus(''), 3000);
-                    setLoading(false);
+                    // If silent save failed, prompts user
+                    // On Linux, if pkexec was canceled or not available, we might want to try password input
+                    // But first, let's fall back to standard flow or password dialog
+                    console.log("Silent admin save failed, trying dialogs", adminError);
                 }
+
+                // If we are here, it means:
+                // 1. Normal write failed
+                // 2. writeHostsWithAdmin failed (either user canceled system dialog, or no cached password)
+
+                // Ask user: "System Dialog" or "Enter Password (Cache)"?
+                // For simplicity, let's use the password dialog if the platform is Linux and error suggests auth issue
+                // But wait, writeHostsWithAdmin ALREADY tries pkexec (System Dialog).
+                // If it failed, it means user canceled it or it's not available.
+
+                // Let's offer the Password Dialog as a fallback/alternative specifically for "Session Mode"
+                setPendingSaveContent(mergedContent);
+                setShowPasswordDialog(true);
+                setLoading(false);
             }
         } else {
             // Saving local profile
@@ -495,6 +497,15 @@ export const MainLayout: React.FC = () => {
                     <Editor content={content} onChange={setContent} />
                 )}
             </div>
+
+            <PasswordDialog
+                isOpen={showPasswordDialog}
+                onClose={() => {
+                    setShowPasswordDialog(false);
+                    setPendingSaveContent(null);
+                }}
+                onSubmit={handlePasswordSubmit}
+            />
         </div>
     );
 };

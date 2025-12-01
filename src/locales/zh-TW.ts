@@ -32,4 +32,34 @@ export const zhTW: Translations = {
         permissionDenied: '操作已取消',
         invalidCredentials: '身份驗證失敗。請重試。',
     },
+    dialog: {
+        deleteProfile: {
+            title: '刪除設定檔',
+            message: '確定要刪除此設定檔嗎？',
+            confirm: '刪除',
+            cancel: '取消',
+        },
+        addProfile: {
+            message: '請輸入設定檔名稱：',
+        },
+    },
+    status: {
+        loaded: '系統 Hosts 已載入',
+        error: '載入 Hosts 失敗',
+        saved: '儲存成功',
+        savedLocal: '設定檔已儲存 (本地)',
+        failedAdmin: '管理員權限儲存失敗',
+    },
+    sidebar: {
+        profiles: '個設定檔',
+        github: 'GitHub',
+        enable: '啟用',
+        disable: '停用',
+        delete: '刪除',
+        types: {
+            system: '系統',
+            local: '本地',
+            remote: '遠端',
+        },
+    },
 };

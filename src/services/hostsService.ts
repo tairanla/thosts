@@ -57,4 +57,8 @@ export const hostsService = {
     writeHostsWithAdmin: async (path: string, content: string): Promise<void> => {
         return await invoke('write_hosts_with_admin', { path, content });
     },
+
+    setSudoPassword: async (password: string): Promise<boolean> => {
+        return await invoke('set_sudo_pass', { password });
+    },
 };
