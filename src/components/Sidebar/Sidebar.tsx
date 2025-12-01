@@ -1,5 +1,5 @@
 import { getVersion } from '@tauri-apps/api/app';
-import { FileText, Github, Kayak, Plus, Power, PowerOff, Settings } from 'lucide-react';
+import { FileText, Github, Plus, Power, PowerOff, Settings } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { HostsProfile } from '../../services/hostsService';
@@ -31,9 +31,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ profiles, selectedId, onSelect
             <div className="sidebar-header">
                 <div className="app-title">
                     <div className="app-icon">
-                        <Kayak size={20} strokeWidth={2.5} />
+                        <img src="/tauri.svg" alt="thosts" width="24" height="24" />
                     </div>
-                    <h1>thosts</h1>
+                    <h1>T-Hosts</h1>
                 </div>
                 <button className="add-profile-btn" title={t.common.addProfile} onClick={onAddProfile}>
                     <Plus size={18} strokeWidth={2.5} />

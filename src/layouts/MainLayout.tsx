@@ -90,8 +90,10 @@ export const MainLayout: React.FC = () => {
                 );
 
                 if (selectedId === '1') {
-                    // Set originalContent to the actual system hosts content (without profiles)
-                    setOriginalContent(originalSystemContent);
+                    // Set originalContent to the ACTUAL FILE CONTENT from disk
+                    // This ensures isContentModified is false if the calculated merged content matches the file
+                    setOriginalContent(fileContent);
+
                     // Calculate and show merged content if there are active profiles
                     const activeProfiles = updated.filter(p =>
                         p.active &&
